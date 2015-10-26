@@ -47,7 +47,6 @@ public class Terrain2 implements Disposable {
 	private final btCollisionShape shape;
 	private final btMotionState state;
 	private final btRigidBody body;
-	private final Vector3 offset = new Vector3(15.5f, 0.5f, 15.5f);
 
 	public Terrain2(FileHandle texture, FileHandle heightMap) {
 		tex = new Texture(texture);
@@ -63,27 +62,21 @@ public class Terrain2 implements Disposable {
 		ShaderProgram.pedantic = false;
 		shader = new ShaderProgram(Gdx.files.internal("com/etk2000/terrain/terrain.vert"),
 				Gdx.files.internal("com/etk2000/terrain/terrain.frag"));
-		
+
 		ModelBuilder mb = new ModelBuilder();
 		mb.begin();
 		mb.part("mesh", mesh, GL20.GL_TRIANGLES, new Material(ColorAttribute.createDiffuse(Color.DARK_GRAY)));
 		m = mb.end();
-		
+
 		shape = Bullet.obtainStaticNodeShape(m.nodes);
 		state = new btDefaultMotionState();
 		body = new btRigidBody(0, state, shape);
-
-		// body.translate(new Vector3(TerrainChunk.scale * (chunk.getWidth() -
-		// 1) * 0.5f, TerrainChunk.heightScale * 0.5f,
-		// TerrainChunk.scale * (chunk.getHeight() - 1) * 0.5f));
-		//body.translate(offset);
 	}
 
 	@Override
 	public void dispose() {
 		body.dispose();
-		m.dispose();
-		mesh.dispose();
+		m.dispose();// contains mesh.dispose();
 		shader.dispose();
 		shape.dispose();
 		state.dispose();

@@ -20,6 +20,8 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
+import com.badlogic.gdx.physics.bullet.collision.ClosestRayResultCallback;
+import com.badlogic.gdx.physics.bullet.collision.RayResultCallback;
 import com.badlogic.gdx.physics.bullet.collision.btBroadphaseInterface;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionConfiguration;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher;
@@ -106,7 +108,7 @@ public class TerrTest extends Game {
 		ballObject.setWorldTransform(ball.transform);
 		ballObject.setFriction(0.5f);
 		ballObject.setRollingFriction(0.25f);
-		
+
 		world.addRigidBody(terrain.getBody(), GROUND_FLAG, ALL_FLAG);
 		world.addRigidBody(ballObject, OBJECT_FLAG, GROUND_FLAG);
 
@@ -140,15 +142,25 @@ public class TerrTest extends Game {
 		modelBatch.end();
 	}
 
-	float t = 0;
+	RayResultCallback rrcb;
 
 	private void logic(float delta) {
-		//final float d = Math.min(1 / 30f, delta);
-		//world.stepSimulation(d, 5, 1 / 60f);
-		world.stepSimulation(1 / 60f, 10);
-		if (ballObject.getLinearVelocity().y == 0) {
-			ballObject.applyForce(new Vector3(100, 0, 0),  new Vector3(0, 0, 0));
+		if (rrcb != null)
+			rrcb.dispose();
+		Vector3 from = new Vector3(ballObject.getWorldTransform().getTranslation(new Vector3()));
+		Vector3 to = new Vector3(from.x, 1, from.z);
+		world.rayTest(from, to, rrcb = new ClosestRayResultCallback(Vector3.Zero, Vector3.Y)); // m_btWorld
+																								// is
+																								// btDiscreteDynamicsWorld
+
+		if (rrcb.hasHit() && rrcb.getClosestHitFraction() < 0.2) {
+			ballObject.applyCentralImpulse(new Vector3(10, 0, 0));
 		}
+		world.stepSimulation(1 / 60f, 10);
+		System.out.println("x: " + ballObject.getLinearVelocity().x + "; y: " + ballObject.getLinearVelocity().y);
+		ballObject.activate();
+		//if (ballObject.getLinearVelocity().y == 0f)
+		//	ballObject.applyCentralImpulse(new Vector3(100, 0, 0));
 		if (ballObject.getWorldTransform().getTranslation(new Vector3()).y > 0)
 			ballObject.setWorldTransform(new Matrix4(new Vector3(10, -20, 10), new Quaternion(), new Vector3(1, 1, 1)));
 	}
